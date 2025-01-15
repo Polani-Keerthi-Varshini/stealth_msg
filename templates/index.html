@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stealth_Msg</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <style>
+        :root {
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0a;
+            --terminal-green: #00ff41;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--terminal-green);
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 0 0 10px var(--neon-green); }
+            25% { text-shadow: -2px 0 var(--neon-green); }
+            50% { text-shadow: 2px 0 var(--neon-green); }
+            75% { text-shadow: 0 -2px var(--neon-green); }
+            100% { text-shadow: 0 0 10px var(--neon-green); }
+        }
+
+        .terminal {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--terminal-green);
+            border-radius: 5px;
+            padding: 20px;
+            flex: 1;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+        }
+
+        .terminal::before {
+            content: "$ ";
+            color: var(--terminal-green);
+        }
+
+        input[type="file"],
+        input[type="text"],
+        textarea {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            background: var(--terminal-green);
+            color: var(--dark-bg);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: var(--neon-green);
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid var(--terminal-green);
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--terminal-green);
+        }
+
+        #preview {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        #previewEncode {
+            max-width: 50%;  /* Adjust the max width as needed */
+            height: auto;
+            margin-top: 20px;
+        }
+
+        #encodedImageLink {
+            color: var(--neon-green);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        #encodedImageLink:hover {
+            text-decoration: underline;
+        }
+
+        #shareTwitter, #shareLinkedIn, #shareDiscord, #shareEmail {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-user-secret"></i> STEALTH MSG </h1>
+        <p>Secure Message Encoding System</p>
+    </div>
+
+    <div class="container">
+
+        <!-- Encode Box (Right) -->
+        <div class="terminal">
+            <h2><i class="fas fa-lock"></i> Encode Message</h2>
+            <form id="encodeForm">
+                <input type="file" id="encodeImage" accept="image/*" required>
+                <textarea id="message" rows="4" placeholder="Enter your secret message..." required></textarea>
+                <button type="submit"><i class="fas fa-shield-alt"></i> Encode</button>
+            </form>
+            <img id="previewEncode" class="preview">
+
+            <div>
+                
+                <a id="shareTwitter" href="#" target="_blank">
+                    <button>Twitter</button>
+                </a>
+                <a id="shareLinkedIn" href="#" target="_blank">
+                    <button>LinkedIn</button>
+                </a>
+                <a id="shareDiscord" href="#" target="_blank">
+                    <button>Discord</button>
+                </a>
+                <a id="shareEmail" href="#" target="_blank">
+                    <button>Email</button>
+                </a>
+                <br>
+            </div>
+
+            <!-- Add Download, Social Share options and Encoded Image Link -->
+            <div id="encodedOptions" style="display:none;">
+                <h3>Get into your device</h3>
+                <a id="downloadLink" href="#" download="encoded_image.png">
+                    <button>Download Encoded Image</button>
+                </a>
+                <br>
+                <div>
+                    <h3>Your Encoded Image URL:</h3>
+                    <a id="encodedImageLink" href="#" target="_blank">Click here to view the encoded image</a>
+                </div>
+            </div>
+        </div>
+
+            
+
+        <!-- Decode Box (Left) -->
+        <div class="terminal">
+            <h2><i class="fas fa-unlock"></i> Decode Message</h2>
+            <form id="decodeForm">
+                <input type="file" id="decodeImage" accept="image/*" required>
+                <button type="submit"><i class="fas fa-search"></i> Decode</button>
+            </form>
+            <div id="decodedMessage" class="result"></div>
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="container">
+
+ 
+
+        
+            <!-- Add Download and Encoded Image Link -->
+            <div id="encodedOptions" style="display:none;">
+                <h3>Get into your device</h3>
+                <a id="downloadLink" href="#" download="encoded_image.png">
+                    <button>Download Encoded Image</button>
+                </a>
+
+    
+                <div>
+                    <h3>Your Encoded Image URL:</h3>
+                    <a id="encodedImageLink" href="#" target="_blank">Click here to view the encoded image</a>
+                </div>
+            </div>
+        </div>
+    
+    </div>
+    
+
+    <script>
+        // Encode image
+        document.getElementById('encodeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            status.textContent = 'Processing...';
+
+            const formData = new FormData();
+            formData.append('image', document.getElementById('encodeImage').files[0]);
+            formData.append('message', document.getElementById('message').value);
+
+            try {
+                const response = await fetch('/encode', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('previewEncode').src = `data:image/png;base64,${data.image}`;
+                    status.textContent = 'Message encoded successfully';
+                    
+                    // Display download options
+                    document.getElementById('encodedOptions').style.display = 'block';
+                    document.getElementById('downloadLink').href = data.share_url;
+                    
+                    // Display the link to the encoded image
+                    document.getElementById('encodedImageLink').href = data.share_url;
+                    document.getElementById('encodedImageLink').textContent = data.share_url;
+
+                } else {
+                    status.textContent = `Error: ${data.message}`;
+                }
+            } catch (err) {
+                status.textContent = `Error: ${err.message}`;
+            }
+        });
+
+        // Decode image
+        document.getElementById('decodeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            status.textContent = 'Processing...';
+
+            const formData = new FormData();
+            formData.append('image', document.getElementById('decodeImage').files[0]);
+
+            try {
+                const response = await fetch('/decode', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('decodedMessage').textContent = `Decoded Message: ${data.message}`;
+                    status.textContent = 'Message decoded successfully';
+                } else {
+                    status.textContent = `Error: ${data.message}`;
+                }
+            } catch (err) {
+                status.textContent = `Error: ${err.message}`;
+            }
+        });
+        function handleEncodeResponse(response) {
+        if (response.status === 'success') {
+            const imageUrl = response.share_url;
+        }
+    }
+    </script>
+</body>
+</html>
